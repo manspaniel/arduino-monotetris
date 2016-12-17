@@ -1,11 +1,14 @@
 #include "tetris.h"
+#include "splash.h"
 #include "../io.h"
 #include "../eep.h"
 
 void TetrisScene::init() {
   
-  gameStartTime = millis() + 4000;
+  gameStartTime = millis() + 1000;
   gameState = PREPARING;
+  
+  randomSeed(3392);
   
 }
 
@@ -26,6 +29,10 @@ void TetrisScene::tick() {
       tickGame();
     }
   } else if(gameState == GAME_OVER) {
+    if(isButtonDown(BUTTON_B)) {
+      goToSplashScreen = true;
+      return;
+    }
     tickGameOver();
   }
   
@@ -47,8 +54,7 @@ void TetrisScene::tickGame() {
     nextDropTime = millis() + 400;
     
     if(!hasNextShape) {
-      // nextShape = random(0, TOTAL_SHAPES);
-      nextShape = 6;
+      nextShape = random(0, TOTAL_SHAPES);
       hasNextShape = true;
       nextShapeNeedsDrawing = true;
     }
@@ -60,7 +66,8 @@ void TetrisScene::tickGame() {
         currentShape = nextShape;
         hasCurrentShape = true;
       } else {
-        gameState = GAME_OVER;
+        enterGameOver();
+        return;
       }
       hasNextShape = false;
       nextShapeNeedsDrawing = true;
@@ -106,40 +113,58 @@ void TetrisScene::tickGame() {
   }
 }
 
+void TetrisScene::enterGameOver() {
+  gameState = GAME_OVER;
+  gameOverStarted = millis();
+  gameOverStep = 0;
+}
+
 void TetrisScene::tickGameOver() {
-  if(gameOverStarted == 0) {
-    gameOverStarted = millis();
-  } else if(gameOverAnimProgress < 1) {
+  if(gameOverAnimProgress < 1) {
     gameOverAnimProgress = (float)(millis() - gameOverStarted) / gameOverAnimDuration;
   }
 }
 
 void TetrisScene::render(Display * display) {
   bool displayUpdated = false;
-  if(displayNeedsWipe) {
-    display->fillScreen(WHITE);
-    displayUpdated = true;
-    displayNeedsWipe = false;
+  if(gameState == PLAYING) {
+    if(displayNeedsWipe) {
+      display->fillScreen(WHITE);
+      displayUpdated = true;
+      displayNeedsWipe = false;
+    }
+    if(backgroundNeedsDrawing) {
+      drawBackground(display);
+      displayUpdated = true;
+      backgroundNeedsDrawing = false;
+    }
+    if(scoreNeedsDrawing) {
+      drawScore(display);
+      displayUpdated = true;
+      scoreNeedsDrawing = false;
+    }
+    if(nextShapeNeedsDrawing) {
+      drawNextShape(display);
+      displayUpdated = true;
+      nextShapeNeedsDrawing = false;
+    }
+    if(canvasNeedsDrawing) {
+      drawCanvas(display);
+      displayUpdated = true;
+      canvasNeedsDrawing = false;
+    }
   }
-  if(backgroundNeedsDrawing) {
-    drawBackground(display);
-    displayUpdated = true;
-    backgroundNeedsDrawing = false;
-  }
-  if(scoreNeedsDrawing) {
-    drawScore(display);
-    displayUpdated = true;
-    scoreNeedsDrawing = false;
-  }
-  if(nextShapeNeedsDrawing) {
-    drawNextShape(display);
-    displayUpdated = true;
-    nextShapeNeedsDrawing = false;
-  }
-  if(canvasNeedsDrawing) {
-    drawCanvas(display);
-    displayUpdated = true;
-    canvasNeedsDrawing = false;
+  if(gameState == PREPARING) {
+    // display->setCursor(22, 41);
+    // unsigned long timeLeft = (gameStartTime - millis());
+    // if(timeLeft < (unsigned long)1000) {
+    //   display->println("GO!");
+    // } else if(timeLeft < (unsigned long)2000) {
+    //   display->println("SET");
+    // } else {
+    //   display->setCursor(19, 41);
+    //   display->println("READY");
+    // }
   }
   
   if(rowFlashNeedsRendering) {
@@ -160,9 +185,8 @@ void TetrisScene::render(Display * display) {
   
   // Draw game over screen
   if(gameState == GAME_OVER) {
-    if(drawGameOver(display)) {
-      displayUpdated = true;
-    }
+    drawGameOver(display);
+    return;
   }
   
   if(displayUpdated) {
@@ -174,9 +198,13 @@ bool TetrisScene::drawGameOver(Display * display) {
   
   float progress = gameOverAnimProgress;
   
+  display->setCursor(0, 0);
+  display->setTextColor(BLACK);
+  // display->println("A");
+  
   bool didDraw = false;
   
-  if(gameOverStep == 0) {
+  // if(gameOverStep == 0) {
     if(progress >= 0.3) {
       gameOverStep = 1;
       progress = 0.3;
@@ -185,7 +213,7 @@ bool TetrisScene::drawGameOver(Display * display) {
     display->fillRect(0, 0, 96, height, BLACK);
     display->fillRect(0, 96-height, 96, height, BLACK);
     didDraw = true;
-  } else if(gameOverStep == 1) {
+  // } else if(gameOverStep == 1) {
     if(completedGameOverStep != 1) {
       display->drawBitmap(16, 29, fuckImage, 63, 20, WHITE);
       completedGameOverStep = 1;
@@ -194,7 +222,7 @@ bool TetrisScene::drawGameOver(Display * display) {
     if(progress >= 0.6) {
       gameOverStep = 2;
     }
-  } else if(gameOverStep == 2) {
+  // } else if(gameOverStep == 2) {
     if(completedGameOverStep != 2) {
       display->setTextColor(WHITE);
       display->setCursor(25, 56);
@@ -205,7 +233,7 @@ bool TetrisScene::drawGameOver(Display * display) {
     if(progress >= 0.85) {
       gameOverStep = 3;
     }
-  } else if(gameOverStep == 3) {
+  // } else if(gameOverStep == 3) {
     if(completedGameOverStep != 3) {
       char buffer[10];
       itoa(score, buffer, 10);
@@ -222,9 +250,11 @@ bool TetrisScene::drawGameOver(Display * display) {
       completedGameOverStep = 3;
       didDraw = true;
     }
-  }
+  // }
   
-  return didDraw;
+  display->refresh();
+  
+  return true;
   
 }
 
@@ -347,8 +377,7 @@ bool TetrisScene::isValidPlacement(char shape, int x, int y, int rotation) {
 }
 
 bool TetrisScene::probeCanvas(int x, int y) {
-  if(y > CELLS_HIGH - 1) return true;
-  if(x < 0 || x >= CELLS_WIDE) return true;
+  if(x < 0 || x >= CELLS_WIDE || y < 0 || y > CELLS_HIGH - 1) return true;
   int index = y * CELLS_WIDE + x;
   int byte = floor(index/8);
   return CHECK_BIT(canvas[byte], index % 8);
@@ -406,7 +435,7 @@ void TetrisScene::checkForFilledRows() {
   // Add to score
   if(lineCount) {
     rowsNeedDeleting = true;
-    score += pow(lineCount, 1.5);
+    score += pow(lineCount * 10, 1.5);
     scoreNeedsDrawing = true;
     int emote = 0;
     rowFlashesLeft = 11;

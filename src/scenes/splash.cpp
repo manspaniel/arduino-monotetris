@@ -126,12 +126,13 @@ void SplashScene::tick() {
       menuItem++;
       needsRedraw = true;
       if(menuItem >= TOTAL_MENU_ITEMS) menuItem = 0;
-    } else if(isButtonDown(BUTTON_A)) {
+    } else if(isButtonDown(BUTTON_A) || isButtonDown(BUTTON_B)) {
       // Serial.println("Pressed A");
       if(menuItem == 0) {
         // Start a new game!
         // Serial.println("Starting game!");
-        nextScene = new TetrisScene();
+        // nextScene = new TetrisScene();
+        goToTetrisScreen = true;
       }
     } else if(isButtonDown(BUTTON_B)) {
       nextScene = new SplashScene();

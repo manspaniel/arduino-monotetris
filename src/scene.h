@@ -6,6 +6,8 @@
 class Scene {
 public:
   bool isFirstRender = true;
+  bool goToSplashScreen = false;
+  bool goToTetrisScreen = false;
   Scene * nextScene;
   virtual ~Scene();
   virtual void init();

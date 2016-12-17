@@ -19,8 +19,8 @@ typedef Adafruit_SharpMem Display;
 static Display display(SCK, MOSI, SS);
 
 // Buttons
-#define BUTTON_L 14
-#define BUTTON_R 15
+#define BUTTON_L 15
+#define BUTTON_R 14
 #define BUTTON_A 16
 #define BUTTON_B 17
 

@@ -2,6 +2,8 @@
 #include "io.h"
 
 #include "scenes/logos.h"
+#include "scenes/splash.h"
+#include "scenes/tetris.h"
 
 Game::Game() {
   display = getMainDisplay();
@@ -23,6 +25,16 @@ void Game::tick() {
       currentScene = oldScene->nextScene;
       currentScene->init();
       delete oldScene;
+    } else if(currentScene->goToSplashScreen == true) {
+      Scene * oldScene = currentScene;
+      delete oldScene;
+      currentScene = new SplashScene();
+      currentScene->init();
+    } else if(currentScene->goToTetrisScreen == true) {
+      Scene * oldScene = currentScene;
+      delete oldScene;
+      currentScene = new TetrisScene();
+      currentScene->init();
     }
   }
 }

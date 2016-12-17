@@ -94,9 +94,9 @@ private:
   bool nextShapeNeedsDrawing = true;
   
   // Game over state
-  unsigned long gameOverStarted;
+  unsigned long gameOverStarted = 0;
   float gameOverAnimDuration = 4000;
-  float gameOverAnimProgress = 0;
+  float gameOverAnimProgress = 0.25;
   int gameOverStep = 0;
   int completedGameOverStep = 0;
   
@@ -125,6 +125,8 @@ private:
   // Tickers..
   void tickGame();
   void tickGameOver();
+  
+  void enterGameOver();
   
 };
 

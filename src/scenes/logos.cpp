@@ -43,7 +43,7 @@ void LogosScene::init() {
   millisTillNextStage = millis() + millisPerStage;
 	// lastMillis = millis();
 	needsRedraw = true;
-	nextScene = new TetrisScene();
+	// nextScene = new TetrisScene();
 }
 
 void LogosScene::tick() {
