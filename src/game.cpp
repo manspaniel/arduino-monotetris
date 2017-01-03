@@ -4,13 +4,14 @@
 #include "scenes/logos.h"
 #include "scenes/splash.h"
 #include "scenes/tetris.h"
+#include "scenes/enterscore.h"
 
 Game::Game() {
   display = getMainDisplay();
 }
 
 void Game::start() {
-  currentScene = new LogosScene();
+  currentScene = new TetrisScene();
   currentScene->init();
   initButtons();
 }
@@ -20,21 +21,19 @@ void Game::tick() {
     currentScene->tick();
     currentScene->render(display);
     currentScene->isFirstRender = false;
-    if(currentScene->nextScene != NULL) {
+    if(currentScene->switchToScene != NONE) {
       Scene * oldScene = currentScene;
-      currentScene = oldScene->nextScene;
+      if(currentScene->switchToScene == LOGOS) {
+        currentScene = new LogosScene();
+      } else if(currentScene->switchToScene == SPLASH) {
+        currentScene = new SplashScene();
+      } else if(currentScene->switchToScene == TETRIS) {
+        currentScene = new TetrisScene();
+      } else if(currentScene->switchToScene == ENTER_HIGH_SCORE) {
+        currentScene = new EnterScoreScene();
+      }
       currentScene->init();
       delete oldScene;
-    } else if(currentScene->goToSplashScreen == true) {
-      Scene * oldScene = currentScene;
-      delete oldScene;
-      currentScene = new SplashScene();
-      currentScene->init();
-    } else if(currentScene->goToTetrisScreen == true) {
-      Scene * oldScene = currentScene;
-      delete oldScene;
-      currentScene = new TetrisScene();
-      currentScene->init();
     }
   }
 }

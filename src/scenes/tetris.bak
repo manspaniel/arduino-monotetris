@@ -45,8 +45,6 @@ void TetrisScene::tick() {
       return;
     }
     tickGameOver();
-  } else if(gameState == VICTORY) {
-    tickGameOver();
   }
   
 }
@@ -127,17 +125,14 @@ void TetrisScene::tickGame() {
 }
 
 void TetrisScene::enterGameOver() {
-  if(isHighScore(score)) {
-    setPendingScore(score);
-    gameState = VICTORY;
-    gameOverStarted = millis();
-    gameOverStep = 0;
-    // switchToScene = ENTER_HIGH_SCORE;
-  } else {
+  // if(isHighScore(score)) {
+  //   setPendingScore(score);
+  //   switchToScene = ENTER_HIGH_SCORE;
+  // } else {
     gameState = GAME_OVER;
     gameOverStarted = millis();
     gameOverStep = 0;
-  }
+  // }
 }
 
 void TetrisScene::tickGameOver() {
@@ -215,7 +210,7 @@ void TetrisScene::render(Display * display) {
   }
   
   // Draw game over screen
-  if(gameState == GAME_OVER || gameState == VICTORY) {
+  if(gameState == GAME_OVER) {
     drawGameOver(display);
     return;
   }
@@ -261,7 +256,7 @@ bool TetrisScene::drawGameOver(Display * display) {
     }
   } else if(gameOverStep == 2) {
     if(completedGameOverStep != 2) {
-      drawProgString(display, 25, 56, gameState == VICTORY ? STR_ONLY_GOT : STR_HIGH_SCORE_GOT, WHITE, BLACK);
+      drawProgString(display, 25, 56, STR_ONLY_GOT, WHITE, BLACK);
       completedGameOverStep = 2;
       didDraw = true;
       if(!isMuted()) tone(BUZZER_PIN, 100, 150);

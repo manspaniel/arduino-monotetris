@@ -1,6 +1,8 @@
 #include "logos.h"
 #include "splash.h"
 #include "tetris.h"
+#include "strings.h"
+#include "io.h"
 
 const unsigned char ericsFace [] PROGMEM = {
 	// 'splash-intro'
@@ -43,18 +45,16 @@ void LogosScene::init() {
   millisTillNextStage = millis() + millisPerStage;
 	// lastMillis = millis();
 	needsRedraw = true;
-	// nextScene = new TetrisScene();
 }
 
 void LogosScene::tick() {
-	// nextScene = new MenuScene();
 	if(millis() > millisTillNextStage) {
 		millisTillNextStage = millis() + millisPerStage;
 		needsRedraw = true;
 		stage++;
 	}
 	if(stage >= 4) {
-		nextScene = new SplashScene();
+		switchToScene = SPLASH;
 	}
 }
 
@@ -74,7 +74,7 @@ void LogosScene::render(Display * display) {
 		display->fillScreen(WHITE);
 	  display->drawBitmap(34, 39, edLogo, 32, 16, BLACK);
 		display->setCursor(25,60);
-	  display->println("Presents");
+		drawProgString(display, 25, 60, STR_PRESENTS, BLACK, WHITE);
 		millisTillNextStage = millis() + millisPerStage * 1.5;
 	}
 	display->refresh();

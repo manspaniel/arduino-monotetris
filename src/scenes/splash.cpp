@@ -1,6 +1,8 @@
 #include "splash.h"
 #include "../fun_math.h"
 #include "../io.h"
+#include "../eep.h"
+#include "../strings.h"
 #include "tetris.h"
 
 // 'logoFull'
@@ -126,16 +128,17 @@ void SplashScene::tick() {
       menuItem++;
       needsRedraw = true;
       if(menuItem >= TOTAL_MENU_ITEMS) menuItem = 0;
-    } else if(isButtonDown(BUTTON_A) || isButtonDown(BUTTON_B)) {
-      // Serial.println("Pressed A");
+    } else if(isButtonDown(BUTTON_A)) {
       if(menuItem == 0) {
         // Start a new game!
-        // Serial.println("Starting game!");
-        // nextScene = new TetrisScene();
-        goToTetrisScreen = true;
+        switchToScene = TETRIS;
+      } else {
+        switchToScene = SPLASH;
       }
     } else if(isButtonDown(BUTTON_B)) {
-      nextScene = new SplashScene();
+      // switchToScene = SPLASH;
+      setMuted(!isMuted());
+      needsRedraw = true;
     }
   }
   
@@ -164,7 +167,8 @@ void SplashScene::render(Display * display) {
       // Delete...
       display->setTextColor(BLACK);
       display->setCursor(30, 53);
-      display->println("DELETE");
+      // PRINT: display->println("DELETE");
+      drawProgString(display, 30, 54, STR_DELETE, BLACK, WHITE);
       display->refresh();
     }
   } else if(stage == 3) {
@@ -172,7 +176,8 @@ void SplashScene::render(Display * display) {
       // ...Everything!
       display->setTextColor(BLACK);
       display->setCursor(17, 63);
-      display->println("EVERYTHING!");
+      // PRINT: display->println("EVERYTHING!");
+      drawProgString(display, 17, 63, STR_EVERYTHING, BLACK, WHITE);
       display->refresh();
     }
   } else if(stage == 4) {
@@ -181,7 +186,7 @@ void SplashScene::render(Display * display) {
       display->setCursor(21, top);
       if(pressAnyKeyState) {
         display->setTextColor(BLACK);
-        display->println("PRESS A/B");
+        drawProgString(display, 21, top, STR_PRESS_AB, BLACK, WHITE);
       } else {
         display->fillRect(0, top, 96, 7, WHITE);
       }
@@ -196,17 +201,18 @@ void SplashScene::render(Display * display) {
       display->fillRect(0, 53, 96, 43, WHITE);
       
       // Display item names
-      display->setCursor(34, 60);
-      display->println("Play!");
+      
+      drawProgString(display, 34, 60, STR_PLAY, BLACK, WHITE);
       if(menuItem == 0) {
         display->drawBitmap(26, 61, menuArrow, 16, 16, BLACK);
       }
       
-      display->setCursor(15, 72);
-      display->println("Leaderboard");
+      drawProgString(display, 15, 72, STR_LEADERBOARD, BLACK, WHITE);
       if(menuItem == 1) {
         display->drawBitmap(7, 73, menuArrow, 16, 16, BLACK);
       }
+      
+      display->drawChar(10, 10, isMuted() ? 'Y' : 'N', BLACK, WHITE, 1);
       
       display->refresh();
       

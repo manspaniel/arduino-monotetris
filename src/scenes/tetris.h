@@ -38,7 +38,7 @@ static const bool tetrisShapes[] PROGMEM = {
   0,1,0,0,
   0,1,0,0,
   
-  0,1,0,0,
+  0,0,0,0,
   1,1,1,0,
   0,1,0,0,
   
@@ -77,6 +77,8 @@ private:
   unsigned long gameStartTime;
   unsigned long nextDropTime;
   
+  int prepareStep = 0;
+  
   // Current shape
   int posX = 0;
   int posY = 0;
@@ -96,7 +98,7 @@ private:
   // Game over state
   unsigned long gameOverStarted = 0;
   float gameOverAnimDuration = 4000;
-  float gameOverAnimProgress = 0.25;
+  float gameOverAnimProgress = 0;
   int gameOverStep = 0;
   int completedGameOverStep = 0;
   
