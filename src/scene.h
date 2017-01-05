@@ -8,7 +8,7 @@ enum SceneSwitchMode {
   LOGOS,
   SPLASH,
   TETRIS,
-  ENTER_HIGH_SCORE
+  GAME_OVER
 };
 
 class Scene {
@@ -16,7 +16,7 @@ public:
   bool isFirstRender = true;
   bool goToSplashScreen = false;
   SceneSwitchMode switchToScene = NONE;
-  // virtual ~Scene();
+  // protected: virtual ~Scene();
   virtual void init();
   virtual void tick();
   virtual void render(Display * display);

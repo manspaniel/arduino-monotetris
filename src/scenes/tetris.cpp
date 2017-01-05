@@ -1,8 +1,9 @@
 #include "tetris.h"
 #include "../io.h"
+// #include "../drawing.h"
 #include "../eep.h"
 #include "../strings.h"
-#include "enterscore.h"
+#include "gameover.h"
 
 #include "pitches.h"
 
@@ -39,15 +40,18 @@ void TetrisScene::tick() {
     } else {
       tickGame();
     }
-  } else if(gameState == GAME_OVER) {
+  } else if(gameState == _GAME_OVER) {
     if(isButtonDown(BUTTON_B)) {
       switchToScene = SPLASH;
       return;
     }
-    tickGameOver();
-  } else if(gameState == VICTORY) {
-    tickGameOver();
+    // tickGameOver();
   }
+  
+  // if(millis() > gameStartTime + 1000) {
+    // setPendingScore(5731);
+    // switchToScene = GAME_OVER;
+  // }
   
 }
 
@@ -129,21 +133,12 @@ void TetrisScene::tickGame() {
 void TetrisScene::enterGameOver() {
   if(isHighScore(score)) {
     setPendingScore(score);
-    gameState = VICTORY;
-    gameOverStarted = millis();
-    gameOverStep = 0;
-    // switchToScene = ENTER_HIGH_SCORE;
-  } else {
-    gameState = GAME_OVER;
-    gameOverStarted = millis();
-    gameOverStep = 0;
-  }
-}
-
-void TetrisScene::tickGameOver() {
-  if(gameOverAnimProgress < 1) {
-    gameOverAnimProgress = (float)(millis() - gameOverStarted) / gameOverAnimDuration;
-  }
+    switchToScene = GAME_OVER;
+  }// else {
+    // gameState = _GAME_OVER;
+    // gameOverStarted = millis();
+    // gameOverStep = 0;
+  // }
 }
 
 void TetrisScene::render(Display * display) {
@@ -215,8 +210,8 @@ void TetrisScene::render(Display * display) {
   }
   
   // Draw game over screen
-  if(gameState == GAME_OVER || gameState == VICTORY) {
-    drawGameOver(display);
+  if(gameState == _GAME_OVER) {
+    // drawGameOver(display);
     return;
   }
   
@@ -225,79 +220,79 @@ void TetrisScene::render(Display * display) {
   }
 }
 
-bool TetrisScene::drawGameOver(Display * display) {
-  
-  float progress = gameOverAnimProgress;
-  
-  display->setCursor(0, 0);
-  display->setTextColor(BLACK);
-  // display->println("A");
-  
-  bool didDraw = false;
-  
-  if(gameOverStep == 0) {
-    if(progress >= 0.3) {
-      gameOverStep = 1;
-      progress = 0.3;
-      if(!isMuted()) noTone(BUZZER_PIN);
-      // tone(BUZZER_PIN, 100, 150);
-    }
-    int height = (progress / 0.3) * (96.0 / 2.0);
-    display->fillRect(0, 0, 96, height, BLACK);
-    display->fillRect(0, 96-height, 96, height, BLACK);
-    didDraw = true;
-    if(progress <= 0.25) {
-      if(!isMuted()) tone(BUZZER_PIN, 3500 - progress * 3500);
-    }
-  } else if(gameOverStep == 1) {
-    if(completedGameOverStep != 1) {
-      display->drawBitmap(16, 29, fuckImage, 63, 20, WHITE);
-      completedGameOverStep = 1;
-      didDraw = true;
-      if(!isMuted()) tone(BUZZER_PIN, 100, 150);
-    }
-    if(progress >= 0.6) {
-      gameOverStep = 2;
-    }
-  } else if(gameOverStep == 2) {
-    if(completedGameOverStep != 2) {
-      drawProgString(display, 25, 56, gameState == VICTORY ? STR_ONLY_GOT : STR_HIGH_SCORE_GOT, WHITE, BLACK);
-      completedGameOverStep = 2;
-      didDraw = true;
-      if(!isMuted()) tone(BUZZER_PIN, 100, 150);
-    }
-    if(progress >= 0.85) {
-      gameOverStep = 3;
-    }
-  } else if(gameOverStep == 3) {
-    if(completedGameOverStep != 3) {
-      char buffer[10];
-      itoa(score, buffer, 10);
-      int scoreLength = 0;
-      for(int k = 0; k < 9; k++) {
-        if(buffer[k] == '\0') {
-          scoreLength = k;
-          break;
-        }
-      }
-      display->setTextColor(WHITE, BLACK);
-      display->setCursor(48 - scoreLength * 3, 70);
-      display->println(buffer);
-      completedGameOverStep = 3;
-      didDraw = true;
-      // tone(BUZZER_PIN, 100, 150);
-      // delay(0.3 * gameOverAnimDuration);
-      if(!isMuted()) tone(BUZZER_PIN, 50, 500);
-    }
-  }
-  
-  if(didDraw) {
-    display->refresh();
-  }
-  
-  return true;
-  
-}
+// bool TetrisScene::drawGameOver(Display * display) {
+//   
+//   float progress = gameOverAnimProgress;
+//   
+//   display->setCursor(0, 0);
+//   display->setTextColor(BLACK);
+//   // display->println("A");
+//   
+//   bool didDraw = false;
+//   
+//   if(gameOverStep == 0) {
+//     if(progress >= 0.3) {
+//       gameOverStep = 1;
+//       progress = 0.3;
+//       if(!isMuted()) noTone(BUZZER_PIN);
+//       // tone(BUZZER_PIN, 100, 150);
+//     }
+//     int height = (progress / 0.3) * (96.0 / 2.0);
+//     display->fillRect(0, 0, 96, height, BLACK);
+//     display->fillRect(0, 96-height, 96, height, BLACK);
+//     didDraw = true;
+//     if(progress <= 0.25) {
+//       if(!isMuted()) tone(BUZZER_PIN, 3500 - progress * 3500);
+//     }
+//   } else if(gameOverStep == 1) {
+//     if(completedGameOverStep != 1) {
+//       // display->drawBitmap(16, 29, fuckImage, 63, 20, WHITE);
+//       completedGameOverStep = 1;
+//       didDraw = true;
+//       if(!isMuted()) tone(BUZZER_PIN, 100, 150);
+//     }
+//     if(progress >= 0.6) {
+//       gameOverStep = 2;
+//     }
+//   } else if(gameOverStep == 2) {
+//     if(completedGameOverStep != 2) {
+//       drawProgString(display, 25, 56, STR_ONLY_GOT, WHITE, BLACK);
+//       completedGameOverStep = 2;
+//       didDraw = true;
+//       if(!isMuted()) tone(BUZZER_PIN, 100, 150);
+//     }
+//     if(progress >= 0.85) {
+//       gameOverStep = 3;
+//     }
+//   } else if(gameOverStep == 3) {
+//     if(completedGameOverStep != 3) {
+//       char buffer[10];
+//       itoa(score, buffer, 10);
+//       int scoreLength = 0;
+//       for(int k = 0; k < 9; k++) {
+//         if(buffer[k] == '\0') {
+//           scoreLength = k;
+//           break;
+//         }
+//       }
+//       display->setTextColor(WHITE, BLACK);
+//       display->setCursor(48 - scoreLength * 3, 70);
+//       display->println(buffer);
+//       completedGameOverStep = 3;
+//       didDraw = true;
+//       // tone(BUZZER_PIN, 100, 150);
+//       // delay(0.3 * gameOverAnimDuration);
+//       if(!isMuted()) tone(BUZZER_PIN, 50, 500);
+//     }
+//   }
+//   
+//   if(didDraw) {
+//     display->refresh();
+//   }
+//   
+//   return true;
+//   
+// }
 
 void TetrisScene::drawBackground(Display * display) {
   
@@ -474,35 +469,34 @@ void TetrisScene::checkForFilledRows() {
     rowsNeedDeleting = true;
     score += pow(lineCount * 10, 1.5);
     scoreNeedsDrawing = true;
-    int emote = 0;
     rowFlashesLeft = 11;
     nextRowFlash = 0;
-    if(linesDestroyed > 150) {
-      emote = 11;
-    } else if(linesDestroyed > 100) {
-      emote = 10;
-    } else if(linesDestroyed > 80) {
-      emote = 9;
-    } else if(linesDestroyed > 50) {
-      emote = 8;
-    } else if(linesDestroyed > 30) {
-      emote = 7;
-    } else if(linesDestroyed > 20) {
-      emote = 6;
-    } else if(linesDestroyed > 15) {
-      emote = 5;
-    } else if(linesDestroyed > 10) {
-      emote = 4;
-    } else if(linesDestroyed > 6) {
-      emote = 3;
-    } else if(linesDestroyed > 3) {
-      emote = 2;
-    } else if(linesDestroyed > 1) {
-      emote = 1;
-    }
-    if(emote > lastEmoteShown) {
-      aboutToShowEmote = emote;
-    }
+    // if(linesDestroyed > 150) {
+    //   emote = 11;
+    // } else if(linesDestroyed > 100) {
+    //   emote = 10;
+    // } else if(linesDestroyed > 80) {
+    //   emote = 9;
+    // } else if(linesDestroyed > 50) {
+    //   emote = 8;
+    // } else if(linesDestroyed > 30) {
+    //   emote = 7;
+    // } else if(linesDestroyed > 20) {
+    //   emote = 6;
+    // } else if(linesDestroyed > 15) {
+    //   emote = 5;
+    // } else if(linesDestroyed > 10) {
+    //   emote = 4;
+    // } else if(linesDestroyed > 6) {
+    //   emote = 3;
+    // } else if(linesDestroyed > 3) {
+    //   emote = 2;
+    // } else if(linesDestroyed > 1) {
+    //   emote = 1;
+    // }
+    // if(emote > lastEmoteShown) {
+    //   aboutToShowEmote = emote;
+    // }
   }
   
 }

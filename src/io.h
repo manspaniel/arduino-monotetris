@@ -15,7 +15,7 @@ typedef Adafruit_SharpMem Display;
 #define BLACK 0
 #define WHITE 1
 
-#define BUZZER_PIN 3
+#define BUZZER_PIN 2
 
 // Init display..
 static Display display(SCK, MOSI, SS);
@@ -32,7 +32,7 @@ Display * getMainDisplay();
 void initButtons();
 bool isButtonDown(int button);
 
-// For drawing
 void drawProgString(Display * display, int16_t x, int16_t y, const char * str, uint16_t color, uint16_t bg);
+void drawDialog(Display * display, const char * progMemTitle, int x, int y, int width, int height);
 
 #endif

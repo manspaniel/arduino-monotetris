@@ -24,4 +24,11 @@ const char STR_ONLY_GOT[] PROGMEM = {"Only deleted"};
 const char STR_HIGH_SCORE_GOT[] PROGMEM = {"Deleted"};
 const char STR_FILES[] PROGMEM = {"Files"};
 
+const char STR_PLEASE_WAIT[] PROGMEM = {"PLZ WAIT"};
+const char STR_EMPTYING[] PROGMEM = {"Empting"};
+const char STR_TRASH[] PROGMEM = {"trash..."};
+const char STR_DELETED_FILES[] PROGMEM = {" files"};
+const char STR_ERROR_DIALOG[] PROGMEM = {"ERROR"};
+const char STR_GAME_OVER[] PROGMEM = {"GAME OVER"};
+
 #endif

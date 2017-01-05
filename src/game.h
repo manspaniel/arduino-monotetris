@@ -13,7 +13,7 @@ public:
   Game();
   void start();
   void tick();
-  void setScene(Scene * scene);
+  // void setScene(Scene * scene);
 };
 
 #endif

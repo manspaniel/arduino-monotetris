@@ -1,10 +1,10 @@
 #include "game.h"
 #include "io.h"
-
+#include "fm.h"
 #include "scenes/logos.h"
 #include "scenes/splash.h"
 #include "scenes/tetris.h"
-#include "scenes/enterscore.h"
+#include "scenes/gameover.h"
 
 Game::Game() {
   display = getMainDisplay();
@@ -22,23 +22,27 @@ void Game::tick() {
     currentScene->render(display);
     currentScene->isFirstRender = false;
     if(currentScene->switchToScene != NONE) {
-      Scene * oldScene = currentScene;
-      if(currentScene->switchToScene == LOGOS) {
-        currentScene = new LogosScene();
-      } else if(currentScene->switchToScene == SPLASH) {
+      SceneSwitchMode nextScene = currentScene->switchToScene;
+      delete currentScene;
+      currentScene = NULL;
+      if(nextScene == SPLASH) {
         currentScene = new SplashScene();
-      } else if(currentScene->switchToScene == TETRIS) {
+      } else if(nextScene == TETRIS) {
         currentScene = new TetrisScene();
-      } else if(currentScene->switchToScene == ENTER_HIGH_SCORE) {
-        currentScene = new EnterScoreScene();
+      } else if(nextScene == GAME_OVER) {
+        currentScene = new GameOverScene();
       }
       currentScene->init();
-      delete oldScene;
     }
   }
+  
+  display->setCursor(0, 0);
+  display->setTextColor(WHITE, BLACK);
+  display->println(millis());
+  display->refresh();
 }
 
-void Game::setScene(Scene * scene) {
-  currentScene = scene;
-  currentScene->init();
-}
+// void Game::setScene(Scene * scene) {
+//   currentScene = scene;
+//   currentScene->init();
+// }
