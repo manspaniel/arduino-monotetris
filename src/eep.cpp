@@ -3,17 +3,17 @@
 
 HighScore getHighScore(int index) {
   HighScore entry;
-  EEPROM.get((int)EEP_N_SCORES_SAVED + sizeof(HighScore) * index, entry);
+  EEPROM.get((int)EEP_SCORES_ADDR + sizeof(HighScore) * index, entry);
   return entry;
 }
 
 void setHighScore(int index, HighScore entry) {
-  EEPROM.put((int)EEP_N_SCORES_SAVED + sizeof(HighScore) * index, entry);
+  EEPROM.put((int)EEP_SCORES_ADDR + sizeof(HighScore) * index, entry);
 }
 
 void addHighScore(HighScore newEntry) {
   int targetIndex = EEP_TOTAL_HIGHSCORES;
-  for(int k = EEP_TOTAL_HIGHSCORES; k > 0; k--) {
+  for(int k = EEP_TOTAL_HIGHSCORES; k >= 0; k--) {
     HighScore entry = getHighScore(k);
     if(entry.score < newEntry.score) {
       // This score is LESS than the new score, so copy the score above into this one
@@ -31,18 +31,20 @@ void addHighScore(HighScore newEntry) {
   setHighScore(targetIndex, newEntry);
 }
 
-bool isHighScore(int score) {
+void eraseHighScores() {
   
-  // If there's been less than 5 scores recorded, then yep this is a high score
-  int totalScoresRecorded;
-  EEPROM.get((int)EEP_N_SCORES_SAVED, totalScoresRecorded);
-  if(totalScoresRecorded < EEP_TOTAL_HIGHSCORES) {
-    return true;
+  for(int index = 0; index < EEP_TOTAL_HIGHSCORES; index++) {
+    HighScore entry;
+    entry.score = 0;
+    EEPROM.put((int)EEP_SCORES_ADDR + sizeof(HighScore) * index, entry);
   }
+}
+
+bool isHighScore(int score) {
   
   // Otherwise, as long as the score is higher than the current 5th high score, then yep it's a high score
   HighScore lowestScore;
-  EEPROM.get(EEP_SCORES_ADDR + (EEP_TOTAL_HIGHSCORES - 1) * sizeof(HighScore), lowestScore);
+  EEPROM.get((int)EEP_SCORES_ADDR + sizeof(HighScore) * (EEP_TOTAL_HIGHSCORES - 1), lowestScore);
   if(score > lowestScore.score) {
     return true;
   } else {
@@ -65,6 +67,6 @@ bool isMuted() {
 
 void setMuted(bool state) {
   _mutedValueIsCached = true;
-  _cachedMutedValue = true;
+  _cachedMutedValue = state;
   EEPROM.write(EEP_MUSIC_MUTED_ADDR, state ? 1 : 0);
 }

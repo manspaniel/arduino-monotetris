@@ -1,17 +1,21 @@
 #include "game.h"
 #include "io.h"
-#include "fm.h"
+#include "eep.h"
 #include "scenes/logos.h"
 #include "scenes/splash.h"
 #include "scenes/tetris.h"
 #include "scenes/gameover.h"
+#include "scenes/leaderboard.h"
 
 Game::Game() {
   display = getMainDisplay();
+  
+  // eraseHighScores();
+  
 }
 
 void Game::start() {
-  currentScene = new TetrisScene();
+  currentScene = new LogosScene();
   currentScene->init();
   initButtons();
 }
@@ -31,15 +35,17 @@ void Game::tick() {
         currentScene = new TetrisScene();
       } else if(nextScene == GAME_OVER) {
         currentScene = new GameOverScene();
+      } else if(nextScene == LEADERBOARD) {
+        currentScene = new LeaderBoardScene();
       }
       currentScene->init();
     }
   }
   
-  display->setCursor(0, 0);
-  display->setTextColor(WHITE, BLACK);
-  display->println(millis());
-  display->refresh();
+  // display->setCursor(0, 0);
+  // display->setTextColor(WHITE, BLACK);
+  // display->println(millis());
+  // display->refresh();
 }
 
 // void Game::setScene(Scene * scene) {

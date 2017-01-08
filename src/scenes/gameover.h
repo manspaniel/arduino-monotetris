@@ -29,6 +29,16 @@ private:
   int currentStep = -1;
   bool needsWipe = true;
   
+  // Text entry
+  unsigned long nextCursorFlash;
+  bool cursorVisible = true;
+  int characterIndex = 0;
+  bool nameNeedsRedraw = false;
+  bool okButtonHighlighted = false;
+  bool buttonNeedsRedraw = true;
+  
+  void saveScore();
+  
 };
 
 

@@ -54,7 +54,7 @@ void LogosScene::tick() {
 		needsRedraw = true;
 		stage++;
 	}
-	if(stage >= 4) {
+	if(stage >= 3) {
 		switchToScene = SPLASH;
 	}
 }
@@ -76,7 +76,6 @@ void LogosScene::render(Display * display) {
 	  display->drawBitmap(34, 39, edLogo, 32, 16, BLACK);
 		display->setCursor(25,60);
 		drawProgString(display, 25, 60, STR_PRESENTS, BLACK, WHITE);
-		millisTillNextStage = millis() + millisPerStage * 1.5;
 	}
 	display->refresh();
 }

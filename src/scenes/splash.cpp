@@ -74,7 +74,7 @@ const unsigned char menuArrow [] PROGMEM = {
 #define LOGO_ROW_START 9
 #define LOGO_ROW_HEIGHT 38
 
-#define TOTAL_MENU_ITEMS 2
+#define TOTAL_MENU_ITEMS 3
 
 const float LOGO_LEFT_START = -60.0;
 const float LOGO_LEFT_END = 9.0;
@@ -129,17 +129,16 @@ void SplashScene::tick() {
       menuItem++;
       needsRedraw = true;
       if(menuItem >= TOTAL_MENU_ITEMS) menuItem = 0;
-    } else if(isButtonDown(BUTTON_A)) {
+    } else if(isButtonDown(BUTTON_A) || isButtonDown(BUTTON_B)) {
       if(menuItem == 0) {
         // Start a new game!
         switchToScene = TETRIS;
-      } else {
-        switchToScene = SPLASH;
+      } else if(menuItem == 1) {
+        switchToScene = LEADERBOARD;
+      } else if(menuItem == 2) {
+        setMuted(!isMuted());
+        needsRedraw = true;
       }
-    } else if(isButtonDown(BUTTON_B)) {
-      // switchToScene = SPLASH;
-      setMuted(!isMuted());
-      needsRedraw = true;
     }
   }
   
@@ -168,7 +167,6 @@ void SplashScene::render(Display * display) {
       // Delete...
       display->setTextColor(BLACK);
       display->setCursor(30, 53);
-      // PRINT: display->println("DELETE");
       drawProgString(display, 30, 54, STR_DELETE, BLACK, WHITE);
       display->refresh();
     }
@@ -177,7 +175,6 @@ void SplashScene::render(Display * display) {
       // ...Everything!
       display->setTextColor(BLACK);
       display->setCursor(17, 63);
-      // PRINT: display->println("EVERYTHING!");
       drawProgString(display, 17, 63, STR_EVERYTHING, BLACK, WHITE);
       display->refresh();
     }
@@ -203,17 +200,20 @@ void SplashScene::render(Display * display) {
       
       // Display item names
       
-      drawProgString(display, 34, 60, STR_PLAY, BLACK, WHITE);
+      drawProgString(display, 34, 56, STR_PLAY, BLACK, WHITE);
       if(menuItem == 0) {
-        display->drawBitmap(26, 61, menuArrow, 16, 16, BLACK);
+        display->drawBitmap(26, 57, menuArrow, 16, 16, BLACK);
       }
       
-      drawProgString(display, 15, 72, STR_LEADERBOARD, BLACK, WHITE);
+      drawProgString(display, 15, 68, STR_LEADERBOARD, BLACK, WHITE);
       if(menuItem == 1) {
-        display->drawBitmap(7, 73, menuArrow, 16, 16, BLACK);
+        display->drawBitmap(7, 69, menuArrow, 16, 16, BLACK);
       }
       
-      display->drawChar(10, 10, isMuted() ? 'Y' : 'N', BLACK, WHITE, 1);
+      drawProgString(display, 35 - (isMuted() ? 6 : 0), 80, isMuted() ? STR_UNMUTE : STR_MUTE, BLACK, WHITE);
+      if(menuItem == 2) {
+        display->drawBitmap(27 - (isMuted() ? 6 : 0), 81, menuArrow, 16, 16, BLACK);
+      }
       
       display->refresh();
       

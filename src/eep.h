@@ -9,18 +9,24 @@
 #define EEP_TOTAL_HIGHSCORES    5
 
 struct HighScore {
-  char name[3];
+  char name[6];
   int score;
   HighScore() {
+    name[0] = ' ';
+    name[1] = ' ';
+    name[2] = ' ';
+    name[3] = ' ';
+    name[4] = ' ';
+    name[5] = ' ';
   }
 };
 
 HighScore getHighScore(int index);
+// HighScore getScoreToBeat(int score);
 void setHighScore(int index, HighScore entry);
-
 void addHighScore(HighScore entry);
-
 bool isHighScore(int score);
+void eraseHighScores();
 
 // Muting
 bool isMuted();

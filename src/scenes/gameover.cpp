@@ -2,6 +2,8 @@
 #include "strings.h"
 #include "io.h"
 
+#define CURSOR_FLASH_DURATION							700
+
 const unsigned char skullIcon [] PROGMEM = {
 	// 'skull'
 	0x38, 0x00, 0x38, 0x00, 0x28, 0x00, 0x28, 0x00, 0xc8, 0x00, 0x26, 0x00, 0x85, 0xff, 0x42, 0x00, 
@@ -16,7 +18,7 @@ const unsigned char skullIcon [] PROGMEM = {
 
 void GameOverScene::init() {
 	scoreEntry.score = getPendingScore();
-	shouldCrash = true;
+	shouldCrash = !isHighScore(scoreEntry.score);
 	animStartTime = millis();
 }
 
@@ -42,6 +44,65 @@ void GameOverScene::tick() {
 		}
 	}
 	
+	if(currentStep == 3) {
+		// Text entry
+		bool didMoveCursor = false;
+		if(isButtonDown(BUTTON_L, 300)) {
+			if(okButtonHighlighted) {
+				okButtonHighlighted = false;
+				buttonNeedsRedraw = true;
+			} else if(characterIndex > 0) {
+				characterIndex--;
+			}
+			didMoveCursor = true;
+		} else if(isButtonDown(BUTTON_R, 300)) {
+			if(characterIndex >= 5) {
+				okButtonHighlighted = true;
+				buttonNeedsRedraw = true;
+			} else {
+				characterIndex++;
+			}
+			didMoveCursor = true;
+		} else if(isButtonDown(BUTTON_A, 130)) {
+			if(okButtonHighlighted) {
+				// Clicking A when OK button is highlighted
+				saveScore();
+			} else {
+				// Down
+				char chr = scoreEntry.name[characterIndex];
+				if(chr == 'Z') {
+					scoreEntry.name[characterIndex] = ' ';
+				} else if(chr == ' ') {
+					scoreEntry.name[characterIndex] = 'A';
+				} else {
+					scoreEntry.name[characterIndex] = chr + 1;
+				}
+				didMoveCursor = true;
+			}
+		} else if(isButtonDown(BUTTON_B, 130)) {
+			if(okButtonHighlighted) {
+				// Clicking B when OK button is highlighted
+				saveScore();
+			} else {
+				// Up
+				char chr = scoreEntry.name[characterIndex];
+				if(chr == ' ') {
+					scoreEntry.name[characterIndex] = 'Z';
+				} else if(chr == 'A') {
+					scoreEntry.name[characterIndex] = ' ';
+				} else {
+					scoreEntry.name[characterIndex] = chr - 1;
+				}
+				didMoveCursor = true;
+			}
+		}
+		if(didMoveCursor) {
+			nextCursorFlash = millis() + CURSOR_FLASH_DURATION;
+			cursorVisible = true;
+			nameNeedsRedraw = true;
+		}
+	}
+	
 }
 
 void GameOverScene::render(Display * display) {
@@ -62,7 +123,7 @@ void GameOverScene::render(Display * display) {
 		
 		// Progress bar geom
 		int pw = 70;
-		int ph = 9;
+		int ph = 8;
 		int px = 12;
 		int py = 54;
 		
@@ -128,6 +189,7 @@ void GameOverScene::render(Display * display) {
 		
 		// Show cool message
 		if(shouldCrash) {
+			// ERROR ERROR ERROR (score isn't good enough for a high score)
 			if(millis() > nextErrorTime) {
 				nextErrorTime = millis() + 100;
 				int x = 2 + totalErrorsShown * 10;
@@ -135,18 +197,60 @@ void GameOverScene::render(Display * display) {
 				didDraw = true;
 				totalErrorsShown++;
 				if(totalErrorsShown == 9) {
-					tone(BUZZER_PIN, 300, 600);
+					if(!isMuted()) tone(BUZZER_PIN, 300, 600);
 					display->fillScreen(BLACK);
 					drawProgString(display, 21, 45, STR_GAME_OVER, WHITE, BLACK);display->refresh();
 					delay(900);
 					switchToScene = SPLASH;
 					return;
 				} else {
-					tone(BUZZER_PIN, 1000, 50);
+					if(!isMuted()) tone(BUZZER_PIN, 1000, 50);
 					drawDialog(display, STR_ERROR_DIALOG, x, y, 50, 40);
 					display->drawBitmap(x + 5, y + 15, skullIcon, 32, 32, BLACK);
 				}
 			}
+		} else {
+			// Plz enter ur name, cause you got a high score
+			if(!isMuted()) tone(BUZZER_PIN, 1000, 300);
+			nextStep = 3;
+		}
+		
+	} else if(nextStep == 3) {
+		
+		int x = 2;
+		int y = 20;
+		int w = 88;
+		int h = 62;
+		
+		int fX = x + 5;
+		int fY = y + 17;
+		
+		if(currentStep != 3) {
+			display->fillScreen(WHITE);
+			currentStep = 3;
+			drawDialog(display, STR_ENTER_NAME, x, y, w, h);
+			display->drawRect(fX, fY, w - 9, 23, BLACK);
+			didDraw = true;
+			nameNeedsRedraw = true;
+			nextCursorFlash = millis() + 700;
+		}
+		
+		if(millis() >= nextCursorFlash) {
+			cursorVisible = !cursorVisible;
+			nameNeedsRedraw = true;
+			nextCursorFlash = millis() + CURSOR_FLASH_DURATION;
+		}
+		
+		if(nameNeedsRedraw) {
+			for(int i = 0; i < 6; i++) {
+				bool highlight = cursorVisible && characterIndex == i && okButtonHighlighted == false;
+				display->drawChar(fX + 4 + i * 12, fY + 4, scoreEntry.name[i], highlight ? WHITE : BLACK, highlight ? BLACK : WHITE, 2);
+			}
+			didDraw = true;
+		}
+		
+		if(buttonNeedsRedraw) {
+			drawButton(display, STR_OK_BUTTON, x + 57, y + 45, okButtonHighlighted);
 		}
 		
 	}
@@ -154,21 +258,11 @@ void GameOverScene::render(Display * display) {
 	if(didDraw) {
 		display->refresh();
 	}
-	
-	// display->fillScreen(WHITE);
-	// char buffer[10];
-	// itoa(scoreEntry.score, buffer, 10);
-	// int scoreLength = 0;
-	// for(int k = 0; k < 9; k++) {
-	// 	if(buffer[k] == '\0') {
-	// 		scoreLength = k;
-	// 		break;
-	// 	}
-	// }
-	// display->setTextColor(WHITE, BLACK);
-	// display->setCursor(48 - scoreLength * 3, 70);
-	// display->println(buffer);
-	// display->refresh();
+}
+
+void GameOverScene::saveScore() {
+	addHighScore(scoreEntry);
+	switchToScene = LEADERBOARD;
 }
 
 // Temporary store for current score

@@ -7,14 +7,17 @@
 
 #include "pitches.h"
 
-#define ROW_FLASH_DURATION 50
+#define ROW_FLASH_DURATION   50
+#define TOTAL_SHAPES         7
+#define LEVEL_STEP           50
+#define EMOTE_DURATION       1000
 
 void TetrisScene::init() {
   
   gameStartTime = millis() + 3000;
   gameState = PREPARING;
   
-  randomSeed(analogRead(0));
+  randomSeed((int)millis());
   
 }
 
@@ -35,17 +38,22 @@ void TetrisScene::tick() {
         rowFlashNeedsRendering = true;
         if(rowFlashesLeft == 0) {
           if(!isMuted()) noTone(BUZZER_PIN);
+          adjustLevel();
         }
       }
     } else {
       tickGame();
     }
-  } else if(gameState == _GAME_OVER) {
-    if(isButtonDown(BUTTON_B)) {
-      switchToScene = SPLASH;
-      return;
+  } else if(gameState == SHOWING_EMOTE) {
+    if(millis() > emoteEndTime) {
+      gameState = PLAYING;
+      displayNeedsWipe = true;
+      backgroundNeedsDrawing = true;
+      levelNeedsDrawing = true;
+      scoreNeedsDrawing = true;
+      canvasNeedsDrawing = true;
+      nextShapeNeedsDrawing = true;
     }
-    // tickGameOver();
   }
   
   // if(millis() > gameStartTime + 1000) {
@@ -68,7 +76,7 @@ void TetrisScene::tickGame() {
   }
   
   if(millis() > nextDropTime) {
-    nextDropTime = millis() + 400;
+    nextDropTime = millis() + 450 - max(0, (currentLevel / 20) * 300);
     
     if(!hasNextShape) {
       nextShape = random(0, TOTAL_SHAPES);
@@ -95,6 +103,7 @@ void TetrisScene::tickGame() {
         hasCurrentShape = false;
         applyShape(currentShape, posX, posY, rotation);
         score += 1;
+        adjustLevel();
         scoreNeedsDrawing = true;
         checkForFilledRows();
       }
@@ -104,12 +113,12 @@ void TetrisScene::tickGame() {
     
     // Pressing/holding A just shortens the length of time until the next drop
     if(isButtonDown(BUTTON_A)) {
-      nextDropTime = min(nextDropTime, millis() + 60);
+      nextDropTime = min(nextDropTime, millis() + 50);
     }
   }
   
   // Rotate at any time
-  if(isButtonDown(BUTTON_B)) {
+  if(isButtonDown(BUTTON_B, 200)) {
     // Rotate, if possible
     canvasNeedsDrawing = true;
     char nextRotation = rotation == 3 ? 0 : rotation + 1;
@@ -130,15 +139,21 @@ void TetrisScene::tickGame() {
   }
 }
 
+void TetrisScene::adjustLevel() {
+  int levelShouldBe = floor((float)score/LEVEL_STEP) + 1;
+  if(currentLevel != levelShouldBe) {
+    gameState = SHOWING_EMOTE;
+    emoteToShow = (emoteToShow + 1) % (TOTAL_EMOTES);
+    emoteStartTime = millis();
+    emoteEndTime = millis() + EMOTE_DURATION;
+    emoteBGDrawn = false;
+    currentLevel = levelShouldBe;
+  }
+}
+
 void TetrisScene::enterGameOver() {
-  if(isHighScore(score)) {
-    setPendingScore(score);
-    switchToScene = GAME_OVER;
-  }// else {
-    // gameState = _GAME_OVER;
-    // gameOverStarted = millis();
-    // gameOverStep = 0;
-  // }
+  setPendingScore(score);
+  switchToScene = GAME_OVER;
 }
 
 void TetrisScene::render(Display * display) {
@@ -153,6 +168,11 @@ void TetrisScene::render(Display * display) {
       drawBackground(display);
       displayUpdated = true;
       backgroundNeedsDrawing = false;
+    }
+    if(levelNeedsDrawing) {
+      drawLevel(display);
+      displayUpdated = true;
+      levelNeedsDrawing = false;
     }
     if(scoreNeedsDrawing) {
       drawScore(display);
@@ -209,10 +229,8 @@ void TetrisScene::render(Display * display) {
     rowFlashNeedsRendering = false;
   }
   
-  // Draw game over screen
-  if(gameState == _GAME_OVER) {
-    // drawGameOver(display);
-    return;
+  if(gameState == SHOWING_EMOTE) {
+    drawEmote(display);
   }
   
   if(displayUpdated) {
@@ -220,79 +238,18 @@ void TetrisScene::render(Display * display) {
   }
 }
 
-// bool TetrisScene::drawGameOver(Display * display) {
-//   
-//   float progress = gameOverAnimProgress;
-//   
-//   display->setCursor(0, 0);
-//   display->setTextColor(BLACK);
-//   // display->println("A");
-//   
-//   bool didDraw = false;
-//   
-//   if(gameOverStep == 0) {
-//     if(progress >= 0.3) {
-//       gameOverStep = 1;
-//       progress = 0.3;
-//       if(!isMuted()) noTone(BUZZER_PIN);
-//       // tone(BUZZER_PIN, 100, 150);
-//     }
-//     int height = (progress / 0.3) * (96.0 / 2.0);
-//     display->fillRect(0, 0, 96, height, BLACK);
-//     display->fillRect(0, 96-height, 96, height, BLACK);
-//     didDraw = true;
-//     if(progress <= 0.25) {
-//       if(!isMuted()) tone(BUZZER_PIN, 3500 - progress * 3500);
-//     }
-//   } else if(gameOverStep == 1) {
-//     if(completedGameOverStep != 1) {
-//       // display->drawBitmap(16, 29, fuckImage, 63, 20, WHITE);
-//       completedGameOverStep = 1;
-//       didDraw = true;
-//       if(!isMuted()) tone(BUZZER_PIN, 100, 150);
-//     }
-//     if(progress >= 0.6) {
-//       gameOverStep = 2;
-//     }
-//   } else if(gameOverStep == 2) {
-//     if(completedGameOverStep != 2) {
-//       drawProgString(display, 25, 56, STR_ONLY_GOT, WHITE, BLACK);
-//       completedGameOverStep = 2;
-//       didDraw = true;
-//       if(!isMuted()) tone(BUZZER_PIN, 100, 150);
-//     }
-//     if(progress >= 0.85) {
-//       gameOverStep = 3;
-//     }
-//   } else if(gameOverStep == 3) {
-//     if(completedGameOverStep != 3) {
-//       char buffer[10];
-//       itoa(score, buffer, 10);
-//       int scoreLength = 0;
-//       for(int k = 0; k < 9; k++) {
-//         if(buffer[k] == '\0') {
-//           scoreLength = k;
-//           break;
-//         }
-//       }
-//       display->setTextColor(WHITE, BLACK);
-//       display->setCursor(48 - scoreLength * 3, 70);
-//       display->println(buffer);
-//       completedGameOverStep = 3;
-//       didDraw = true;
-//       // tone(BUZZER_PIN, 100, 150);
-//       // delay(0.3 * gameOverAnimDuration);
-//       if(!isMuted()) tone(BUZZER_PIN, 50, 500);
-//     }
-//   }
-//   
-//   if(didDraw) {
-//     display->refresh();
-//   }
-//   
-//   return true;
-//   
-// }
+void TetrisScene::drawEmote(Display * display) {
+  
+  float progress = (float)(millis() - emoteStartTime) / EMOTE_DURATION;
+  
+  if(!emoteBGDrawn) {
+    drawDialog(display, STR_DELETE, 20, 30, 56, 40);
+    emoteBGDrawn = true;
+  }
+  
+  drawProgString(display, 50, 60, (char*)pgm_read_word(&(emoteList[emoteToShow])) + 1, WHITE, BLACK);
+  
+}
 
 void TetrisScene::drawBackground(Display * display) {
   
@@ -300,18 +257,15 @@ void TetrisScene::drawBackground(Display * display) {
   drawFrame(display, 3, 4, 53, 88);
   
   // LVL / Score / High Score / Next
-  display->setTextColor(BLACK);
-  display->setCursor(59, 5);
-  // PRINT: display->println("Lvl 99");
-  
+  drawProgString(display, 59, 7, STR_LVL, BLACK, WHITE);
   drawProgString(display, 59, 16, STR_SCORE_COLON, BLACK, WHITE);
-  
   drawProgString(display, 59, 36, STR_HIGH_COLON, BLACK, WHITE);
+  drawProgString(display, 59, 56, STR_NEXT_COLON, BLACK, WHITE);
+  
+  display->setTextColor(BLACK);
   display->setCursor(59, 45);
   HighScore highestScore = getHighScore(0);
   display->println(highestScore.score);
-  
-  drawProgString(display, 59, 56, STR_NEXT_COLON, BLACK, WHITE);
   
   drawFrame(display, 59, 66, 34, 26);
   
@@ -322,6 +276,14 @@ void TetrisScene::drawFrame(Display * display, int x, int y, int width, int heig
   display->drawRect(x, y, width, height, BLACK);
   display->drawFastHLine(x+1, y+height, width, BLACK);
   display->drawFastVLine(x+width, y+1, height, BLACK);
+}
+
+void TetrisScene::drawLevel(Display * display) {
+  
+  display->setTextColor(BLACK, WHITE);
+  display->setCursor(83, 7);
+  display->println(currentLevel);
+  
 }
 
 void TetrisScene::drawScore(Display * display) {

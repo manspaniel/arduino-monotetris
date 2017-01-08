@@ -5,8 +5,6 @@
 #include "../io.h"
 #include "../scene.h"
 
-#define TOTAL_SHAPES 7
-
 #define CHECK_BIT(var, pos) ((var) & (1<<(pos)))
 
 enum GameState {
@@ -14,6 +12,18 @@ enum GameState {
   PLAYING,
   SHOWING_EMOTE,
   _GAME_OVER
+};
+
+#define TOTAL_EMOTES 3
+
+const char emote_1[] PROGMEM = {"Trm -rf *"};
+const char emote_2[] PROGMEM = {"TDELETE *\nFROM wp_posts"};
+const char emote_3[] PROGMEM = {"DDelete?"};
+
+const char* const emoteList[TOTAL_EMOTES] PROGMEM = {
+  emote_1,
+  emote_2,
+  emote_3
 };
 
 static const bool tetrisShapes[] PROGMEM = {
@@ -61,11 +71,15 @@ private:
   
   // Game state
   GameState gameState;
+  int currentLevel = 1;
   int score = 0;
   int linesDestroyed = 0;
-  bool haveShownEmote = false;
-  int aboutToShowEmote = 0;
-  int lastEmoteShown = 0;
+  
+  int emoteToShow = 0;
+  int emoteType;
+  bool emoteBGDrawn = false;
+  unsigned long emoteStartTime;
+  unsigned long emoteEndTime;
   
   int rowFlashesLeft = 0;
   unsigned long nextRowFlash = 0;
@@ -90,6 +104,7 @@ private:
   // Draw updates..
   bool displayNeedsWipe = true;
   bool backgroundNeedsDrawing = true;
+  bool levelNeedsDrawing = true;
   bool scoreNeedsDrawing = true;
   bool canvasNeedsDrawing = true;
   bool nextShapeNeedsDrawing = true;
@@ -103,10 +118,11 @@ private:
   
   // UI drawing
   void drawBackground(Display * display);
+  void drawLevel(Display * display);
   void drawScore(Display * display);
   void drawNextShape(Display * display);
   void drawCanvas(Display * display);
-  // bool drawGameOver(Display * display);
+  void drawEmote(Display * display);
   
   // Draw utils
   void drawFrame(Display * display, int x, int y, int width, int height);
@@ -122,6 +138,7 @@ private:
   void triggerGameOver();           // End the game
   void checkForFilledRows();
   void shiftCanvasDown(int from);
+  void adjustLevel();
   
   // Tickers..
   void tickGame();

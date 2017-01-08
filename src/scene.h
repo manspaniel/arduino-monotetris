@@ -8,6 +8,7 @@ enum SceneSwitchMode {
   LOGOS,
   SPLASH,
   TETRIS,
+  LEADERBOARD,
   GAME_OVER
 };
 
