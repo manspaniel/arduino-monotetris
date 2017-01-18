@@ -14,16 +14,32 @@ enum GameState {
   _GAME_OVER
 };
 
-#define TOTAL_EMOTES 3
+#define TOTAL_EMOTES 11
 
-const char emote_1[] PROGMEM = {"Trm -rf *"};
+const char emote_1[] PROGMEM = {"Trm -rf ~/"};
 const char emote_2[] PROGMEM = {"TDELETE *\nFROM wp_posts"};
-const char emote_3[] PROGMEM = {"DDelete?"};
+const char emote_3[] PROGMEM = {"DDelete? Y/N\n> \t\t\t\t\t\t\t\t\t\tY"};
+const char emote_4[] PROGMEM = {"DThis cannot\nbe undone"};
+const char emote_5[] PROGMEM = {"DSubscribers\nerased"};
+const char emote_6[] PROGMEM = {"Twp_delete_post()"};
+const char emote_7[] PROGMEM = {"DFormatting\npartition..."};
+const char emote_8[] PROGMEM = {"DMake a backup\nfirst?\n> \t\t\t\t\t\t\t\t\t\tN"};
+const char emote_9[] PROGMEM = {"D1 post\nmoved to\nthe Trash"};
+const char emote_10[] PROGMEM = {"DNotes not\nfound"};
+const char emote_11[] PROGMEM = {"DAccount\ndeleted"};
 
 const char* const emoteList[TOTAL_EMOTES] PROGMEM = {
   emote_1,
   emote_2,
-  emote_3
+  emote_3,
+  emote_4,
+  emote_5,
+  emote_6,
+  emote_7,
+  emote_8,
+  emote_9,
+  emote_10,
+  emote_11
 };
 
 static const bool tetrisShapes[] PROGMEM = {
@@ -47,9 +63,9 @@ static const bool tetrisShapes[] PROGMEM = {
   0,1,0,0,
   0,1,0,0,
   
-  0,0,0,0,
-  1,1,1,0,
-  0,1,0,0,
+  0,0,1,0,
+  0,1,1,0,
+  0,0,1,0,
   
   0,0,0,0,
   1,1,1,1,

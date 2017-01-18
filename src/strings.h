@@ -36,6 +36,7 @@ const char STR_GAME_OVER[] PROGMEM = {"GAME OVER"};
 const char STR_ENTER_NAME[] PROGMEM = {"RENAME FILE"};
 
 const char STR_HIGH_SCORE_DIALOG[] PROGMEM = {"WINNERZ"};
+const char STR_LVL_UP[] PROGMEM = {"LVL UP"};
 
 const char STR_OK_BUTTON[] PROGMEM = {" OK "};
 

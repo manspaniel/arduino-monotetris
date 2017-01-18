@@ -33,6 +33,8 @@ void LeaderBoardScene::render(Display * display) {
 		
 		int y = DIALOG_Y + 17 + index * 9;
 		
+		if(score.score == 0) continue;
+		
 		// Name
 		display->setTextColor(BLACK, WHITE);
 		display->setCursor(5, y);

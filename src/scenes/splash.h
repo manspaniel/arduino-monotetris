@@ -25,6 +25,12 @@ private:
   // Menu selection
   int menuItem = 0;
   
+  // Music
+  unsigned long musicStartTime;
+  unsigned long nextNoteAt;
+  int musicIndex = -1;
+  
+  void tickMusic();
 };
 
 #endif

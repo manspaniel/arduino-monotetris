@@ -1,7 +1,7 @@
 #include "splash.h"
 #include "../fun_math.h"
 #include "../io.h"
-// #include "../drawing.h"
+#include "../pitches.h"
 #include "../eep.h"
 #include "../strings.h"
 #include "tetris.h"
@@ -71,6 +71,23 @@ const unsigned char menuArrow [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+#define MUSIC_BIT_DURATION				130
+#define MUSIC_TOTAL_NOTES		  		10
+#define MUSIC_TOTAL_BITS		  		69
+
+const uint16_t musicNotes [] PROGMEM = {
+	NOTE_F5,		0,		1,
+	NOTE_F5,		8,		1,
+	NOTE_DS5,		11,		1,
+	NOTE_F5,		14,		1,
+  NOTE_F5,		23,		1,
+  NOTE_DS5,		26,		1,
+  NOTE_F5,		29,		1,
+  NOTE_F5,		39,		1,
+  NOTE_DS5,		42,		1,
+  NOTE_CS5,		45,		16
+};
+
 #define LOGO_ROW_START 9
 #define LOGO_ROW_HEIGHT 38
 
@@ -84,9 +101,15 @@ const float LOGO_RIGHT_END = 50.0;
 
 void SplashScene::init() {
   startTime = millis();
+  musicStartTime = millis();
+  nextNoteAt = millis();
 }
 
 void SplashScene::tick() {
+  
+  if(!isMuted()) {
+    tickMusic();
+  }
   
   if(stage == 0) {
     introProgress = ((float)millis() - (float)startTime) / 600;
@@ -142,6 +165,35 @@ void SplashScene::tick() {
     }
   }
   
+}
+
+void SplashScene::tickMusic() {
+  
+  if(millis() >= nextNoteAt) {
+    musicIndex++;
+    if(musicIndex < MUSIC_TOTAL_NOTES) {
+      tone(BUZZER_PIN, pgm_read_word_near(musicNotes + musicIndex * 3), pgm_read_word_near(musicNotes + musicIndex * 3 + 2) * MUSIC_BIT_DURATION);
+    }
+    
+    if(musicIndex + 1 < MUSIC_TOTAL_NOTES) {
+      nextNoteAt = musicStartTime + pgm_read_word_near(musicNotes + (musicIndex + 1) * 3 + 1) * MUSIC_BIT_DURATION;
+    }
+    
+  }
+  
+  if(millis() > (unsigned long)(musicStartTime + MUSIC_BIT_DURATION * MUSIC_TOTAL_BITS)) {
+    musicIndex = -1;
+    musicStartTime = millis();
+    nextNoteAt = millis();
+  }
+  
+  // int currentMusicIndex = (millis() - startTime) / (float)MUSIC_BIT_DURATION;
+  // 
+  // if(currentMusicIndex > musicNoteIndex) {
+  //   musicNoteIndex = currentMusicIndex;
+  //   tone(BUZZER_PIN, musicNotes[musicNoteIndex * 3], musicNotes[musicNoteIndex * 3])
+  // }
+  // 
 }
 
 void SplashScene::render(Display * display) {
@@ -217,7 +269,7 @@ void SplashScene::render(Display * display) {
       
       display->refresh();
       
-      delay(300);
+      // delay(300);
     
     }
     

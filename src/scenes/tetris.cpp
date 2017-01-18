@@ -9,8 +9,8 @@
 
 #define ROW_FLASH_DURATION   50
 #define TOTAL_SHAPES         7
-#define LEVEL_STEP           50
-#define EMOTE_DURATION       1000
+#define LEVEL_STEP           150
+#define EMOTE_DURATION       1200
 
 void TetrisScene::init() {
   
@@ -76,7 +76,7 @@ void TetrisScene::tickGame() {
   }
   
   if(millis() > nextDropTime) {
-    nextDropTime = millis() + 450 - max(0, (currentLevel / 20) * 300);
+    nextDropTime = millis() + 450 - max(0.0f, (currentLevel / 20.0f) * 440.0f);
     
     if(!hasNextShape) {
       nextShape = random(0, TOTAL_SHAPES);
@@ -113,12 +113,12 @@ void TetrisScene::tickGame() {
     
     // Pressing/holding A just shortens the length of time until the next drop
     if(isButtonDown(BUTTON_A)) {
-      nextDropTime = min(nextDropTime, millis() + 50);
+      nextDropTime = min(nextDropTime, millis() + 45);
     }
   }
   
   // Rotate at any time
-  if(isButtonDown(BUTTON_B, 200)) {
+  if(isButtonDown(BUTTON_B, 400)) {
     // Rotate, if possible
     canvasNeedsDrawing = true;
     char nextRotation = rotation == 3 ? 0 : rotation + 1;
@@ -231,6 +231,7 @@ void TetrisScene::render(Display * display) {
   
   if(gameState == SHOWING_EMOTE) {
     drawEmote(display);
+    displayUpdated = true;
   }
   
   if(displayUpdated) {
@@ -242,12 +243,58 @@ void TetrisScene::drawEmote(Display * display) {
   
   float progress = (float)(millis() - emoteStartTime) / EMOTE_DURATION;
   
+  int totalRows = 1;
+  int totalCols = 0;
+  const char * text = (char*)pgm_read_word(&(emoteList[emoteToShow])) + 1;
+  int len = strlen_P(text);
+  
+  unsigned char byte;
+  int colsThisLine = 0;
+  for(int16_t k = 0; k < len; k++) {
+    byte = pgm_read_byte_near(text + k);
+    if(byte == '\n') {
+      colsThisLine = 0;
+      totalRows++;
+    } else if(byte == '\t') {
+      continue;
+    }
+    colsThisLine++;
+    totalCols = max(colsThisLine, totalCols);
+  }
+  
+  int width = totalCols * 6 + 10;
+  int height = totalRows * 10 + 17;
+  int x = 48 - width/2;
+  int y = 48 - height/2;
+  int textX = x + 5;
+  int textY = y + 16;
+  
   if(!emoteBGDrawn) {
-    drawDialog(display, STR_DELETE, 20, 30, 56, 40);
+    drawDialog(display, STR_LVL_UP, x, y, width, height);
     emoteBGDrawn = true;
   }
   
-  drawProgString(display, 50, 60, (char*)pgm_read_word(&(emoteList[emoteToShow])) + 1, WHITE, BLACK);
+  int col = 0;
+  int row = 0;
+  int limit = (progress * 1.2) * (float)len;
+  for(int16_t k = 0; k < len; k++) {
+    if(k > limit) {
+      continue;
+    }
+    byte = pgm_read_byte_near(text + k);
+    if(byte == '\n') {
+      row++;
+      col = 0;
+      continue;
+    } else if(byte == '\t') {
+      continue;
+    }
+    if(k == limit) {
+      if(!isMuted()) tone(BUZZER_PIN, NOTE_A2, 20);
+    }
+    display->drawChar(col * 6 + textX, row * 10 + textY, byte, BLACK, WHITE, 1);
+    col++;
+  }
   
 }
 
@@ -433,32 +480,6 @@ void TetrisScene::checkForFilledRows() {
     scoreNeedsDrawing = true;
     rowFlashesLeft = 11;
     nextRowFlash = 0;
-    // if(linesDestroyed > 150) {
-    //   emote = 11;
-    // } else if(linesDestroyed > 100) {
-    //   emote = 10;
-    // } else if(linesDestroyed > 80) {
-    //   emote = 9;
-    // } else if(linesDestroyed > 50) {
-    //   emote = 8;
-    // } else if(linesDestroyed > 30) {
-    //   emote = 7;
-    // } else if(linesDestroyed > 20) {
-    //   emote = 6;
-    // } else if(linesDestroyed > 15) {
-    //   emote = 5;
-    // } else if(linesDestroyed > 10) {
-    //   emote = 4;
-    // } else if(linesDestroyed > 6) {
-    //   emote = 3;
-    // } else if(linesDestroyed > 3) {
-    //   emote = 2;
-    // } else if(linesDestroyed > 1) {
-    //   emote = 1;
-    // }
-    // if(emote > lastEmoteShown) {
-    //   aboutToShowEmote = emote;
-    // }
   }
   
 }
